@@ -1,0 +1,10 @@
+apiVersion: v2
+appVersion: 6.8.22
+description: Elasticsearch by Harmonycloud
+name: elasticsearch
+type: application
+version: 1.7.9-4
+annotations:
+  owner: harmonycloud
+  type: db
+  version: 6.8,7.16
