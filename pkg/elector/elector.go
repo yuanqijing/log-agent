@@ -42,7 +42,7 @@ func NewElector(cfg *Config) *Elector {
 		panic(err)
 	}
 
-	podID := kube.PodID()
+	podID := kube.GetPodID()
 
 	e := &Elector{
 		logger:             cfg.Logger,

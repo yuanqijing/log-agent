@@ -1,5 +1,7 @@
 package apis
 
+import "k8s.io/apimachinery/pkg/util/json"
+
 // Log Defines the contract for logging.
 type Log struct {
 	// +optional
@@ -54,4 +56,8 @@ func (in *Log) DeepCopyInto(out *Log) {
 		*out = make([]byte, len(*in))
 		copy(*out, *in)
 	}
+}
+
+func (in *Log) MarshalJSON() ([]byte, error) {
+	return json.Marshal(*in)
 }

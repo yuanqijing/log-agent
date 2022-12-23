@@ -23,6 +23,15 @@ func (c *Client) PatchPodLabels(namespace, name string, label map[string]string)
 	return nil
 }
 
+func (c *Client) GetPod(namespace, name string) (*v1.Pod, error) {
+	pod, err := c.KubeClient.CoreV1().Pods(namespace).Get(context.Background(), name, metav1.GetOptions{})
+	if err != nil {
+		klog.Errorf("GetPod error: %v", err)
+		return nil, err
+	}
+	return pod, nil
+}
+
 func (c *Client) GetPodLabels(namespace, name string) (map[string]string, error) {
 	pod, err := c.KubeClient.CoreV1().Pods(namespace).Get(context.Background(), name, metav1.GetOptions{})
 	if err != nil {
@@ -38,6 +47,17 @@ func (c *Client) GetPodsBySelector(namespace string, selector map[string]string)
 	})
 	if err != nil {
 		klog.Errorf("GetPodsBySelector error: %v", err)
+		return nil, err
+	}
+	return pods.Items, nil
+}
+
+func (c *Client) GetPodsByFieldSelector(namespace string, fieldSelector map[string]string) ([]v1.Pod, error) {
+	pods, err := c.KubeClient.CoreV1().Pods(namespace).List(context.Background(), metav1.ListOptions{
+		FieldSelector: Map2Str(fieldSelector),
+	})
+	if err != nil {
+		klog.Errorf("GetPodsByFieldSelector error: %v", err)
 		return nil, err
 	}
 	return pods.Items, nil

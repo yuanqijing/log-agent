@@ -2,6 +2,7 @@ package daemon
 
 import (
 	"github.com/yuanqijing/log-agent/pkg/elector"
+	"github.com/yuanqijing/log-agent/pkg/logger"
 	"k8s.io/klog/v2"
 	"time"
 )
@@ -12,6 +13,9 @@ type Daemon struct {
 
 	// Elector is the elector
 	Elector *elector.Elector
+
+	// Logger is the logger
+	Logger *logger.Logger
 }
 
 func NewDaemon() *Daemon {
@@ -24,8 +28,12 @@ func NewDaemon() *Daemon {
 	// setup elector
 	e := elector.NewElector(config.ElectorConfig)
 
+	// setup logger
+	l := logger.NewLogger(config.LoggerConfig)
+
 	return &Daemon{
 		Elector: e,
+		Logger:  l,
 	}
 }
 
@@ -51,12 +59,17 @@ func (d *Daemon) run(stopCh <-chan struct{}) {
 
 		isLeader := d.Elector.GetLeader()
 		if isLeader {
-			klog.Infof("I am the leader")
-			// TODO: do leader stuff
+			d.runAsLeader(stopCh)
 		} else {
 			klog.Infof("I am not the leader")
 		}
-
 		<-time.After(5 * time.Second)
 	}
+}
+
+func (d *Daemon) runAsLeader(stopCh <-chan struct{}) {
+	klog.Infof("I am the leader")
+	go d.Logger.Run(stopCh)
+	<-stopCh
+	klog.Infof("Leader daemon is shutting down...")
 }

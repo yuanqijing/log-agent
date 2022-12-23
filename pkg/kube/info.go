@@ -51,7 +51,7 @@ func Annotations() map[string]string {
 	return annotations
 }
 
-func PodNamespace() string {
+func GetPodNamespace() string {
 	fileContent, err := readFiles("/etc/pod/metadata/namespace")
 	if err != nil {
 		return ""
@@ -63,7 +63,7 @@ func PodNamespace() string {
 	return ""
 }
 
-func PodName() string {
+func GetPodName() string {
 	fileContent, err := readFiles("/etc/pod/metadata/name")
 	if err != nil {
 		return ""
@@ -75,7 +75,7 @@ func PodName() string {
 	return ""
 }
 
-func PodID() string {
+func GetPodID() string {
 	fileContent, err := readFiles("/etc/pod/metadata/id")
 	if err != nil {
 		return ""
@@ -85,6 +85,14 @@ func PodID() string {
 		return line
 	}
 	return ""
+}
+
+func GetNodeName() string {
+	po, err := APIClient.GetPod(GetPodNamespace(), GetPodName())
+	if err != nil {
+		return ""
+	}
+	return po.Spec.NodeName
 }
 
 func Runtime() map[string]string {

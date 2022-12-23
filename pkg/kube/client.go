@@ -7,6 +7,8 @@ import (
 	"k8s.io/klog/v2"
 )
 
+var APIClient = NewClient(Config{})
+
 type Client struct {
 	KubeConfig string
 
