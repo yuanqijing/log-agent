@@ -1,0 +1,85 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "log-agent.fullname" . }}
+  labels:
+    {{- include "log-agent.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "log-agent.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "log-agent.selectorLabels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "log-agent.serviceAccountName" . }}
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - ./log-agent
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: configmap
+              mountPath: /etc/log-agent/config
+            # downwardAPI volumes resources
+            - name: metadata
+              mountPath: /etc/pod/metadata
+              readOnly: true
+            - name: resources
+              mountPath: /etc/pod/resources
+              readOnly: true
+      volumes:
+        - name: configmap
+          configMap:
+            name: {{ include "log-agent.fullname" . }}
+            items:
+              - key: config.yaml
+                path: config.yaml
+        # downwardAPI volumes resources
+        - name: metadata
+          downwardAPI:
+            items:
+              - path: "labels"
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.labels
+              - path: "annotations"
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.annotations
+              - path: "namespace"
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.namespace
+              - path: "name"
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.name
+              - path: "id"
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.uid
+        - name: resources
+          downwardAPI:
+            items:
+              - path: "cpu_limit"
+                resourceFieldRef:
+                  resource: limits.cpu
+                  containerName: {{ .Chart.Name }}
+              - path: "cpu_request"
+                resourceFieldRef:
+                  resource: requests.cpu
+                  containerName: {{ .Chart.Name }}
+              - path: "memory_limit"
+                resourceFieldRef:
+                  resource: limits.memory
+                  containerName: {{ .Chart.Name }}
+              - path: "memory_request"
+                resourceFieldRef:
+                  resource: requests.memory
+                  containerName: {{ .Chart.Name }}
